@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+/* ── Brand Tokens & CSS Variables ──────────────────── */
+/* Never hardcode hex in components — always use these variables */
+
+:root {
+  /* Brand colors */
+  --brand-navy: 214 60% 16%;
+  --brand-royal-blue: 214 68% 33%;
+  --brand-light-blue: 214 68% 90%;
+
+  /* Surface colors */
+  --background: 210 20% 98%;
+  --background-secondary: 210 18% 96%;
+  --foreground: 214 60% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 214 60% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 214 60% 10%;
+
+  /* Interactive */
+  --primary: 214 68% 33%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 15% 93%;
+  --secondary-foreground: 214 60% 16%;
+  --muted: 214 15% 93%;
+  --muted-foreground: 214 10% 46%;
+  --accent: 214 20% 94%;
+  --accent-foreground: 214 60% 16%;
+
+  /* Status */
+  --success: 152 60% 40%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 0 0% 100%;
+  --info: 210 100% 50%;
+  --info-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders & Rings */
+  --border: 214 20% 90%;
+  --input: 214 20% 90%;
+  --ring: 214 68% 33%;
+
+  /* Sidebar */
+  --sidebar-background: 214 60% 10%;
+  --sidebar-foreground: 214 10% 90%;
+  --sidebar-primary: 214 68% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 214 40% 18%;
+  --sidebar-accent-foreground: 214 10% 90%;
+  --sidebar-border: 214 40% 18%;
+  --sidebar-ring: 214 68% 33%;
+
+  /* Chart */
+  --chart-1: 214 68% 33%;
+  --chart-2: 152 60% 40%;
+  --chart-3: 38 92% 50%;
+  --chart-4: 280 60% 50%;
+  --chart-5: 0 72% 51%;
+
+  /* Layout */
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: 214 50% 6%;
+  --background-secondary: 214 40% 10%;
+  --foreground: 210 15% 95%;
+  --card: 214 45% 10%;
+  --card-foreground: 210 15% 95%;
+  --popover: 214 45% 10%;
+  --popover-foreground: 210 15% 95%;
+
+  --primary: 214 68% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 30% 16%;
+  --secondary-foreground: 210 15% 95%;
+  --muted: 214 30% 16%;
+  --muted-foreground: 214 10% 60%;
+  --accent: 214 30% 16%;
+  --accent-foreground: 210 15% 95%;
+
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 214 30% 18%;
+  --input: 214 30% 18%;
+  --ring: 214 68% 50%;
+
+  --sidebar-background: 214 50% 5%;
+  --sidebar-foreground: 214 10% 85%;
+  --sidebar-accent: 214 40% 12%;
+}
+
+/* ── Base Styles ───────────────────────────────────── */
+
+@layer base {
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  body {
+    @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))];
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+/* ── Scrollbar Customization ───────────────────────── */
+
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+}
+
+/* ── Animations ────────────────────────────────────── */
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+  }
+
+  .glass {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .gradient-brand {
+    background: linear-gradient(135deg, hsl(var(--brand-navy)), hsl(var(--brand-royal-blue)));
+  }
+
+  .gradient-brand-subtle {
+    background: linear-gradient(135deg, hsl(var(--brand-royal-blue) / 0.08), hsl(var(--brand-navy) / 0.04));
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}

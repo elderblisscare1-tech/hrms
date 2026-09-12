@@ -1,0 +1,208 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================
+    // EXISTING ELDERBLISS CARE RULES
+    // =========================
+
+    // ── USERS COLLECTIONS ──
+    match /users/{userId} {
+      allow create: if request.auth != null;
+      allow read: if true;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /users_elderblisscare_sc/{userId} {
+      allow create: if request.auth != null;
+      allow read: if true;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /usersc/{userId} {
+      allow create: if request.auth != null;
+      allow read: if true;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    // ── ADMINS COLLECTION ──
+    match /admins/{adminId} {
+      // Logged-in admin can read own profile
+      allow read: if true;
+
+      // Prevent app from creating/updating admins
+      // Admin records should be managed from Firebase Console
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── PANIC ALERTS COLLECTION ──
+    match /panic_alerts/{alertId} {
+      // Logged-in users can create alerts
+      allow create: if request.auth != null;
+
+      // Admin app can read alerts
+      allow read: if true;
+
+      // Prevent editing alerts after creation
+      allow update: if request.auth != null;
+
+      // Never allow delete
+      allow delete: if false;
+    }
+
+    // ── ADMIN FCM TOKENS ──
+    match /admin_fcm_tokens/{uid} {
+      allow create, update: if request.auth != null
+                            && request.auth.uid == uid;
+
+      allow delete: if request.auth != null
+                            && request.auth.uid == uid;
+
+      allow read: if false;
+    }
+
+    // =========================
+    // EBC DUTYS APP COLLECTIONS
+    // =========================
+    match /users_ebcdutys/{userId} {
+      allow create: if request.auth != null;
+      allow read: if true;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /duties/{dutyId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /duty_categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /duty_applications/{appId} {
+      // Allow read so Admin Panel can fetch applications via client SDK
+      allow read: if true;
+      // Writing is ONLY allowed through the Next.js Backend API
+      allow write: if false;
+    }
+
+    // =========================
+    // NEW BLUEVE HRMS RULES
+    // =========================
+
+    // ── HRMS Helper functions ──
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserCompanyId() {
+      return request.auth.token.companyId;
+    }
+
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+
+    function isCompanyMember(companyId) {
+      // TEMPORARY: Allow all authenticated users during development
+      return isAuthenticated();
+    }
+
+    function isHrAdmin(companyId) {
+      // TEMPORARY: Allow all authenticated users during development
+      return isAuthenticated();
+    }
+
+    function isManagerOrAbove(companyId) {
+      // TEMPORARY: Allow all authenticated users during development
+      return isAuthenticated();
+    }
+
+    // ── Company document ──
+    match /companies/{companyId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if isHrAdmin(companyId);
+    }
+
+    // ── Employees ──
+    match /companies/{companyId}/employees/{employeeId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Departments ──
+    match /companies/{companyId}/departments/{departmentId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if isHrAdmin(companyId);
+    }
+
+    // ── Designations ──
+    match /companies/{companyId}/designations/{designationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Attendance ──
+    match /companies/{companyId}/attendance/{date}/records/{employeeId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Leave Types ──
+    match /companies/{companyId}/leaveTypes/{leaveTypeId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Leave Requests ──
+    match /companies/{companyId}/leaveRequests/{requestId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ── Payroll Runs ──
+    match /companies/{companyId}/payrollRuns/{runId} {
+      allow read: if isHrAdmin(companyId);
+      allow write: if isHrAdmin(companyId);
+    }
+
+    // ── Payslips ──
+    match /companies/{companyId}/payrollRuns/{runId}/payslips/{employeeId} {
+      allow read: if isCompanyMember(companyId) && (
+        request.auth.uid == employeeId ||
+        getUserRole() in ['hr_admin', 'super_admin']
+      );
+      allow write: if false; // Only Cloud Functions write payslips
+    }
+
+    // ── Audit Logs (append-only, never mutated) ──
+    match /companies/{companyId}/auditLogs/{logId} {
+      allow read: if isHrAdmin(companyId);
+      allow create: if isCompanyMember(companyId);
+      allow update, delete: if false; // Write-once, never mutated
+    }
+
+    // ── Notifications ──
+    match /companies/{companyId}/notifications/{notificationId} {
+      allow read: if isCompanyMember(companyId);
+      allow create: if isCompanyMember(companyId);
+      allow update: if isCompanyMember(companyId) && resource.data.employeeId == request.auth.uid;
+    }
+
+    // ── Generic catch-all for other HRMS collections ──
+    match /companies/{companyId}/{collection}/{docId} {
+      allow read: if isCompanyMember(companyId);
+      allow write: if isHrAdmin(companyId);
+    }
+
+    // =========================
+    // DEFAULT DENY ALL
+    // =========================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
