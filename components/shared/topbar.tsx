@@ -79,11 +79,7 @@ export function Topbar() {
 
   const handleSignOut = async () => {
     await signOut();
-    if (claims?.role === "super_admin") {
-      router.push("/super-admin-login");
-    } else {
-      router.push("/admin-login");
-    }
+    router.push("/");
   };
 
   const toggleDarkMode = () => {

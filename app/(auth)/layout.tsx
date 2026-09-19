@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-8">
-            <span className="text-2xl font-bold">BV</span>
+            <span className="text-2xl font-bold">EBC</span>
           </div>
           <h1 className="text-4xl font-bold mb-4 leading-tight">
             Manage your workforce<br />with confidence

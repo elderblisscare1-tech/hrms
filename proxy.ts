@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   
   // Public paths that don't require authentication
-  const isPublicPath = path === '/login' || path === '/admin-login' || path === '/super-admin-login' || path === '/signup' || path === '/forgot-password';
+  const isPublicPath = path === '/login' || path === '/admin-login' || path === '/secure-api-v1-super-admin-auth-gateway-x908b2a' || path === '/signup' || path === '/forgot-password';
   
   // Later we'll decode the JWT cookie to check role
   // const token = request.cookies.get('auth-token')?.value || '';

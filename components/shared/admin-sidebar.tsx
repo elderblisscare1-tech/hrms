@@ -82,11 +82,7 @@ export function AdminSidebar() {
   const handleLogout = async () => {
     try {
       await signOut();
-      if (claims?.role === "super_admin") {
-        router.push("/super-admin-login");
-      } else {
-        router.push("/admin-login");
-      }
+      router.push("/");
     } catch (err) {
       console.error("Error signing out:", err);
     }
@@ -117,7 +113,7 @@ export function AdminSidebar() {
           </div>
         ) : (
           <div className="w-9 h-9 rounded-lg gradient-brand flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">BV</span>
+            <span className="text-white font-bold text-sm">EBC</span>
           </div>
         )}
         {!collapsed && (

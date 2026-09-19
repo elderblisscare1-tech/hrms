@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
       {/* Mobile logo */}
       <div className="lg:hidden flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center">
-          <span className="text-white font-bold text-sm">BV</span>
+          <span className="text-white font-bold text-sm">EBC</span>
         </div>
         <div>
           <h1 className="font-bold text-lg">EBC</h1>
