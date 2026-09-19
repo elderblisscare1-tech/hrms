@@ -46,12 +46,12 @@ export default function LoginPage() {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
-      if (message.includes("user-not-found") || message.includes("wrong-password")) {
+      if (message.includes("user-not-found") || message.includes("wrong-password") || message.includes("invalid-credential")) {
         setError("Invalid email or password");
       } else if (message.includes("too-many-requests")) {
         setError("Too many attempts. Please try again later.");
       } else {
-        setError(error || "Login failed. Please try again.");
+        setError(message || "Login failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Google sign-in failed";
       if (!message.includes("popup-closed")) {
-        setError(error || "Google sign-in failed. Please try again.");
+        setError(message || "Google sign-in failed. Please try again.");
       }
     } finally {
       setGoogleLoading(false);
