@@ -19,7 +19,6 @@ interface Duty {
   title?: string;
   location?: string;
   date?: string | number;
-  date?: string | number;
   categoryId?: string;
   categoryName?: string;
   status?: string;

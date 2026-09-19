@@ -22,7 +22,7 @@ export default function LeadsPage() {
       
       // Let's also fetch the duty titles
       const updatedApps = await Promise.all(
-        apps.map(async (app) => {
+        apps.map(async (app: any) => {
           if (app.dutyId) {
             try {
               const dutyDoc = await getDoc(doc(db, "duties", app.dutyId));
