@@ -94,7 +94,7 @@ service cloud.firestore {
     }
 
     // =========================
-    // NEW BLUEVE HRMS RULES
+    // NEW EBC HRMS RULES
     // =========================
 
     // ── HRMS Helper functions ──

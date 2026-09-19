@@ -1,6 +1,6 @@
 {
-  "name": "BlueVe HRMS",
-  "short_name": "BlueVe",
+  "name": "EBC HRMS",
+  "short_name": "EBC",
   "description": "Human Resource Management System — Manage your workforce with confidence",
   "start_url": "/employee/me",
   "display": "standalone",

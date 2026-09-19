@@ -1,5 +1,5 @@
 /**
- * BlueVe HRMS — Theme Configuration
+ * EBC HRMS — Theme Configuration
  * Brand tokens and design system values. Never hardcode hex in components.
  */
 

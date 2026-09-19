@@ -162,7 +162,7 @@ export default function DesignationsPage() {
         <div className="flex justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--primary))]"></div>
         </div>
-      ) : designations.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Award className="h-10 w-10 text-[hsl(var(--muted-foreground))]" />}
           title="No designations found"

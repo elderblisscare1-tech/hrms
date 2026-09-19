@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/auth-context";
 
 export const metadata: Metadata = {
-  title: "BlueVe HRMS — Human Resource Management System",
+  title: "EBC HRMS — Human Resource Management System",
   description: "Production-grade, multi-tenant Human Resource Management System. Manage employees, attendance, leave, payroll, performance, and more.",
   keywords: ["HRMS", "HR Management", "Payroll", "Attendance", "Leave Management", "Employee Management"],
   manifest: "/manifest.json",

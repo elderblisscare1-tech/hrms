@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             Manage your workforce<br />with confidence
           </h1>
           <p className="text-lg text-white/70 max-w-md">
-            BlueVe HRMS — a complete Human Resource Management System for modern companies. Attendance, payroll, performance, and more.
+            EBC HRMS — a complete Human Resource Management System for modern companies. Attendance, payroll, performance, and more.
           </p>
           <div className="mt-12 grid grid-cols-3 gap-6 text-center">
             <div>

@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
           <span className="text-white font-bold text-sm">BV</span>
         </div>
         <div>
-          <h1 className="font-bold text-lg">BlueVe</h1>
+          <h1 className="font-bold text-lg">EBC</h1>
           <p className="text-[10px] text-[hsl(var(--muted-foreground))] uppercase tracking-widest">HRMS</p>
         </div>
       </div>

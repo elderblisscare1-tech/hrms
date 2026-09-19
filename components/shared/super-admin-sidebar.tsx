@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
+  Building,
   Building2,
   Award,
   CalendarCheck,
@@ -33,6 +34,7 @@ import { useRouter } from "next/navigation";
 const navItems = [
   { label: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
   { label: "Employees", href: "/super-admin/employees", icon: Users },
+  { label: "Clients", href: "/super-admin/clients", icon: Building },
   { label: "Departments", href: "/super-admin/departments", icon: Building2 },
   { label: "Designations", href: "/super-admin/designations", icon: Award },
   { label: "Attendance", href: "/super-admin/attendance", icon: CalendarCheck },

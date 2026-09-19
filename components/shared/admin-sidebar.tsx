@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Users,
+  Building,
   Building2,
   Award,
   CalendarCheck,
@@ -34,6 +35,7 @@ import { useRouter } from "next/navigation";
 const navItems = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Employees", href: "/admin/employees", icon: Users },
+  { label: "Clients", href: "/admin/clients", icon: Building },
   { label: "Departments", href: "/admin/departments", icon: Building2 },
   { label: "Designations", href: "/admin/designations", icon: Award },
   { label: "Vendors", href: "/admin/vendors", icon: Store },
@@ -120,7 +122,7 @@ export function AdminSidebar() {
         )}
         {!collapsed && (
           <div className="animate-fade-in flex-1 truncate">
-            <h1 className="font-bold text-base text-white truncate">{companySettings?.name || "BlueVe"}</h1>
+            <h1 className="font-bold text-base text-white truncate">{companySettings?.name || "EBC"}</h1>
             <p className="text-[10px] text-[hsl(var(--sidebar-foreground)/0.5)] uppercase tracking-widest truncate">HRMS</p>
           </div>
         )}
