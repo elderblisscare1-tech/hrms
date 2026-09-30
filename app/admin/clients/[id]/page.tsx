@@ -9,7 +9,7 @@ import type { Client, ClientStaffAssignment } from "@/lib/schemas/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, UserPlus, History, Clock, User, Building, Phone, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, UserPlus, History, Clock, User, Building, Phone, Mail, MapPin, Store, Users, CalendarDays } from "lucide-react";
 import { AssignStaffDialog } from "./components/assign-staff-dialog";
 import { ExportClientHistoryDialog } from "@/components/shared/export-client-history-dialog";
 import { format } from "date-fns";
@@ -163,6 +163,48 @@ export default function ClientDetailsPage() {
                   </div>
                 </div>
               )}
+              <div className="flex items-start gap-3">
+                <User className="h-4 w-4 mt-0.5 text-[hsl(var(--muted-foreground))]" />
+                <div>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider">NOK Name</p>
+                  <p className="text-sm font-medium">{client.nokName || <span className="text-[hsl(var(--muted-foreground))] font-normal italic">Not provided</span>}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Store className="h-4 w-4 mt-0.5 text-[hsl(var(--muted-foreground))]" />
+                <div>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Vendor Name</p>
+                  <p className="text-sm font-medium">{client.vendorName || <span className="text-[hsl(var(--muted-foreground))] font-normal italic">Not provided</span>}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Users className="h-4 w-4 mt-0.5 text-[hsl(var(--muted-foreground))]" />
+                <div>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Staff Name</p>
+                  <p className="text-sm font-medium">{client.staffName || <span className="text-[hsl(var(--muted-foreground))] font-normal italic">Not provided</span>}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <Phone className="h-4 w-4 mt-0.5 text-[hsl(var(--muted-foreground))]" />
+                <div>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Number</p>
+                  <p className="text-sm font-medium">{client.number || <span className="text-[hsl(var(--muted-foreground))] font-normal italic">Not provided</span>}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CalendarDays className="h-4 w-4 mt-0.5 text-[hsl(var(--muted-foreground))]" />
+                <div>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Duty Start Date</p>
+                  <p className="text-sm font-medium">{client.dutyStartDate || <span className="text-[hsl(var(--muted-foreground))] font-normal italic">Not provided</span>}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CalendarDays className="h-4 w-4 mt-0.5 text-[hsl(var(--muted-foreground))]" />
+                <div>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider">Duty End Date</p>
+                  <p className="text-sm font-medium">{client.dutyEndDate || <span className="text-[hsl(var(--muted-foreground))] font-normal italic">Not provided</span>}</p>
+                </div>
+              </div>
             </div>
             
             {client.notes && (

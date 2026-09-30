@@ -130,8 +130,8 @@ export default function EmployeeHomePage() {
     );
   }
 
-  const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : "Employee";
-  const initials = employee ? `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}` : "EM";
+  const employeeName = employee && employee.firstName && employee.lastName ? `${employee.firstName} ${employee.lastName}` : "Employee";
+  const initials = employee && employee.firstName && employee.lastName ? `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}` : "EM";
 
   return (
     <div className="space-y-5 animate-fade-in pb-4">

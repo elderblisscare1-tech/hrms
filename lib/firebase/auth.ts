@@ -87,6 +87,10 @@ export async function getUserClaims(user: User): Promise<UserClaims> {
     companyId = "demo_company";
   }
 
+  if (!employeeId) {
+    employeeId = user.uid;
+  }
+
   return {
     companyId,
     role,

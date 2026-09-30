@@ -13,6 +13,12 @@ export const clientSchema = z.object({
   companyId: z.string().optional(), // For multi-tenant context
   createdAt: z.any().optional(),
   updatedAt: z.any().optional(),
+  nokName: z.string().optional(),
+  vendorName: z.string().optional(),
+  staffName: z.string().optional(),
+  number: z.string().optional(),
+  dutyStartDate: z.string().optional(),
+  dutyEndDate: z.string().optional(),
 });
 
 export type Client = z.infer<typeof clientSchema>;

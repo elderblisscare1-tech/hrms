@@ -128,12 +128,12 @@ export default function LandingPage() {
             <span className="font-bold text-lg tracking-tight">EBC HRMS</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/secure-api-v1-super-admin-auth-gateway-x908b2a">
-              <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
+            <Link href="/login">
+              <Button variant="ghost" className="hidden sm:inline-flex">Employee Login</Button>
             </Link>
-            <Link href="/secure-api-v1-super-admin-auth-gateway-x908b2a">
+            <Link href="/admin-login">
               <Button className="gradient-brand text-white border-0">
-                Go to Portal <ArrowRight className="ml-2 h-4 w-4" />
+                Admin Portal <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -161,9 +161,14 @@ export default function LandingPage() {
             EBC HRMS provides everything you need to manage employees, track attendance, run payroll, and streamline your operations in one beautiful platform.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/secure-api-v1-super-admin-auth-gateway-x908b2a">
+            <Link href="/login">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-blue-500/20 text-blue-400 hover:bg-blue-500/10">
+                Employee Portal
+              </Button>
+            </Link>
+            <Link href="/admin-login">
               <Button size="lg" className="h-14 px-8 text-lg gradient-brand text-white border-0 shadow-lg shadow-blue-500/25 rounded-full">
-                Get Started
+                Admin Portal
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -222,6 +227,11 @@ export default function LandingPage() {
           <p className="text-sm">
             © {new Date().getFullYear()} EBC HRMS. All rights reserved.
           </p>
+          <div className="mt-4">
+            <Link href="/secure-api-v1-super-admin-auth-gateway-x908b2a" className="text-[10px] opacity-50 hover:opacity-100 transition-opacity">
+              System Administration
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

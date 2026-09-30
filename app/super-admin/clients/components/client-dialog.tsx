@@ -32,6 +32,12 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
       address: "",
       status: "active",
       notes: "",
+      nokName: "",
+      vendorName: "",
+      staffName: "",
+      number: "",
+      dutyStartDate: "",
+      dutyEndDate: "",
     }
   });
 
@@ -45,6 +51,12 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
         address: initialData.address || "",
         status: initialData.status || "active",
         notes: initialData.notes || "",
+        nokName: initialData.nokName || "",
+        vendorName: initialData.vendorName || "",
+        staffName: initialData.staffName || "",
+        number: initialData.number || "",
+        dutyStartDate: initialData.dutyStartDate || "",
+        dutyEndDate: initialData.dutyEndDate || "",
       });
     } else {
       reset({
@@ -55,6 +67,12 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
         address: "",
         status: "active",
         notes: "",
+        nokName: "",
+        vendorName: "",
+        staffName: "",
+        number: "",
+        dutyStartDate: "",
+        dutyEndDate: "",
       });
     }
   }, [initialData, reset]);
@@ -96,6 +114,36 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
             <div className="space-y-2 col-span-2">
               <Label htmlFor="address">Address</Label>
               <Input id="address" {...register("address")} placeholder="123 Main St, City, Country" />
+            </div>
+
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="nokName">NOK Name</Label>
+              <Input id="nokName" {...register("nokName")} placeholder="e.g. Jane Doe" />
+            </div>
+            
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="vendorName">Vendor Name</Label>
+              <Input id="vendorName" {...register("vendorName")} placeholder="e.g. Supplier Inc" />
+            </div>
+
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="staffName">Staff Name</Label>
+              <Input id="staffName" {...register("staffName")} placeholder="e.g. John Smith" />
+            </div>
+
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="number">Number</Label>
+              <Input id="number" {...register("number")} placeholder="e.g. 123456789" />
+            </div>
+
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="dutyStartDate">Duty Start Date</Label>
+              <Input id="dutyStartDate" type="date" {...register("dutyStartDate")} />
+            </div>
+
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label htmlFor="dutyEndDate">Duty End Date</Label>
+              <Input id="dutyEndDate" type="date" {...register("dutyEndDate")} />
             </div>
             
             <div className="space-y-2 col-span-2 sm:col-span-1">
