@@ -89,7 +89,7 @@ export default function ClientsPage() {
         <div>
           <h1 className="text-2xl font-bold">Clients</h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            {loading ? "Loading..." : `${clients.length} clients configured`}
+            {loading ? "Loading..." : `${filtered.length} client${filtered.length === 1 ? '' : 's'} configured`}
           </p>
         </div>
         <div className="flex items-center gap-2">
