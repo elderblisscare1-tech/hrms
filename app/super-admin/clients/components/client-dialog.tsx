@@ -38,6 +38,7 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
       number: "",
       dutyStartDate: "",
       dutyEndDate: "",
+      staffType: "",
     }
   });
 
@@ -57,6 +58,7 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
         number: initialData.number || "",
         dutyStartDate: initialData.dutyStartDate || "",
         dutyEndDate: initialData.dutyEndDate || "",
+        staffType: initialData.staffType || "",
       });
     } else {
       reset({
@@ -73,6 +75,7 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
         number: "",
         dutyStartDate: "",
         dutyEndDate: "",
+      staffType: "",
       });
     }
   }, [initialData, reset]);
@@ -161,6 +164,20 @@ export function ClientDialog({ isOpen, onClose, onSave, initialData }: ClientDia
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2 col-span-2 sm:col-span-1">
+              <Label>Staff Type</Label>
+              <Select onValueChange={(val) => setValue("staffType", val)} defaultValue={initialData?.staffType || ""}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select staff type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gda">GDA</SelectItem>
+                  <SelectItem value="nurse">Nurse</SelectItem>
+                  <SelectItem value="semi nurse">Semi Nurse</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
 
             <div className="space-y-2 col-span-2">
               <Label htmlFor="notes">Notes</Label>

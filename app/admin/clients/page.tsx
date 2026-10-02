@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Plus, Pencil, Trash2, Building, Search, Phone, Mail, ArrowRight, Download } from "lucide-react";
 import Link from "next/link";
@@ -19,6 +20,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<(Client & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   
   const [showDialog, setShowDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -74,10 +76,11 @@ export default function ClientsPage() {
     }
   };
 
-  const filtered = clients.filter((c) =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (c.company && c.company.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filtered = clients.filter((c) => {
+    const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) || (c.company && c.company.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = statusFilter === "all" || c.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -103,9 +106,23 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-        <Input placeholder="Search clients by name or company..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+          <Input placeholder="Search clients by name or company..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+        </div>
+        <div className="w-full sm:w-[200px]">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {loading ? (
@@ -155,12 +172,29 @@ export default function ClientsPage() {
                       <span className="truncate">{client.phone}</span>
                     </div>
                   )}
+                  {client.dutyStartDate && (
+                    <div className="flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]">
+                      <span className="font-semibold text-xs">Start:</span>
+                      <span className="truncate">{client.dutyStartDate}</span>
+                    </div>
+                  )}
+                  {client.dutyEndDate && (
+                    <div className="flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]">
+                      <span className="font-semibold text-xs">End:</span>
+                      <span className="truncate">{client.dutyEndDate}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between mt-4 pt-3 border-t border-[hsl(var(--border)/0.5)]">
                   <Badge variant={client.status === "active" ? "success" : "secondary"} className="text-xs">
                     {client.status === "active" ? "Active" : "Inactive"}
                   </Badge>
+                  {client.staffType && (
+                    <Badge variant="outline" className="text-xs uppercase ml-2 bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.2)]">
+                      {client.staffType}
+                    </Badge>
+                  )}
                   
                   <Link href={`/admin/clients/${client.id}`}>
                     <Button variant="ghost" size="sm" className="text-xs">

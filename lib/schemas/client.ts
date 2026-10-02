@@ -19,6 +19,7 @@ export const clientSchema = z.object({
   number: z.string().optional(),
   dutyStartDate: z.string().optional(),
   dutyEndDate: z.string().optional(),
+  staffType: z.string().optional(),
 });
 
 export type Client = z.infer<typeof clientSchema>;
