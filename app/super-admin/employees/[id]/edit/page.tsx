@@ -30,6 +30,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
   const [designations, setDesignations] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateEmployeeInput>({
     resolver: zodResolver(createEmployeeSchema),
@@ -45,17 +46,19 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
     if (!companyId || !id) return;
     const fetchData = async () => {
       try {
-        const [deps, desigs, emps, rolesData, empDoc] = await Promise.all([
+        const [deps, desigs, emps, rolesData, vendorsData, empDoc] = await Promise.all([
           listDocuments(companyId, "departments"),
           listDocuments(companyId, "designations"),
           listDocuments(companyId, "employees"),
           listDocuments(companyId, "roles"),
+          listDocuments(companyId, "vendors"),
           getDocument<CreateEmployeeInput>(companyId, "employees", id)
         ]);
         setDepartments(deps);
         setDesignations(desigs);
         setManagers(emps);
         setRoles(rolesData);
+        setVendors(vendorsData);
         if (empDoc) {
           reset(empDoc);
           if (empDoc.photoUrl) setCurrentPhotoUrl(empDoc.photoUrl);
@@ -87,10 +90,11 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
       if (!cleanData.departmentId) delete cleanData.departmentId;
       if (!cleanData.designationId) delete cleanData.designationId;
       if (!cleanData.reportingManagerId) delete cleanData.reportingManagerId;
+      if (!cleanData.vendorId) delete cleanData.vendorId;
 
       await updateDocument(companyId, "employees", id, cleanData);
       alert("Employee updated successfully!");
-      router.push("/admin/employees");
+      router.push("/super-admin/employees");
     } catch (error: any) {
       console.error("Error updating employee:", error);
       alert("Failed to update employee: " + (error.message || "Unknown error"));
@@ -111,7 +115,7 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/admin/employees">
+        <Link href="/super-admin/employees">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -266,6 +270,15 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
                 <option value="">Select Manager</option>
                 {managers.map(m => (
                   <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Vendor (If Contracted)</label>
+              <select className="flex h-10 w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm" {...register("vendorId")}>
+                <option value="">None / Select Vendor</option>
+                {vendors.map(v => (
+                  <option key={v.id} value={v.id}>{v.name} - {v.companyName}</option>
                 ))}
               </select>
             </div>

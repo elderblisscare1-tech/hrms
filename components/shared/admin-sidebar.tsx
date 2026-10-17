@@ -91,7 +91,7 @@ export function AdminSidebar() {
   const filteredNavItems = navItems.filter(item => {
     if (isSuper) return true;
     const sectionId = item.label.toLowerCase();
-    return hasPermission(sectionId);
+    return hasPermission(sectionId) || hasPermission(sectionId.replace(/\s+/g, "_"));
   });
 
   return (

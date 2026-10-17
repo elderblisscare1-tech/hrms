@@ -25,6 +25,7 @@ import {
   ChevronRight,
   LogOut,
   Shield,
+  Store,
   ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const navItems = [
   { label: "Clients", href: "/super-admin/clients", icon: Building },
   { label: "Departments", href: "/super-admin/departments", icon: Building2 },
   { label: "Designations", href: "/super-admin/designations", icon: Award },
+  { label: "Vendors", href: "/super-admin/vendors", icon: Store },
   { label: "Attendance", href: "/super-admin/attendance", icon: CalendarCheck },
   { label: "Daily Attendance", href: "/super-admin/attendance/daily", icon: Clock },
   { label: "Leave", href: "/super-admin/leave", icon: CalendarOff },
@@ -89,7 +91,7 @@ export function SuperAdminSidebar() {
   const filteredNavItems = navItems.filter(item => {
     if (isSuper) return true;
     const sectionId = item.label.toLowerCase();
-    return hasPermission(sectionId);
+    return hasPermission(sectionId) || hasPermission(sectionId.replace(/\s+/g, "_"));
   });
 
   return (

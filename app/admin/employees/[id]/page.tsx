@@ -32,6 +32,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   const [designationName, setDesignationName] = useState("N/A");
   const [managerName, setManagerName] = useState("N/A");
   const [roleName, setRoleName] = useState("N/A");
+  const [vendorName, setVendorName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   
   const [showPassword, setShowPassword] = useState(false);
@@ -63,6 +64,10 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
           if (empDoc.role) {
             const r = await getDocument<Role>(companyId, "roles", empDoc.role);
             if (r) setRoleName(r.name);
+          }
+          if (empDoc.vendorId) {
+            const v = await getDocument<any>(companyId, "vendors", empDoc.vendorId);
+            if (v) setVendorName(`${v.name} (${v.companyName})`);
           }
         }
       } catch (err) {
@@ -268,6 +273,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               { label: "Reporting Manager", value: managerName },
               { label: "Duty Hours", value: employee.dutyHours || "Not specified" },
               { label: "Role", value: roleName.toUpperCase() },
+              ...(vendorName ? [{ label: "Contracted Vendor", value: vendorName }] : []),
             ].map((item) => (
               <div key={item.label} className="flex justify-between items-center py-1 border-b border-[hsl(var(--border)/0.5)] last:border-0">
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">{item.label}</span>

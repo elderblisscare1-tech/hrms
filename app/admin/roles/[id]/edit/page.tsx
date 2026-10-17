@@ -19,18 +19,23 @@ import { ArrowLeft, Save, ShieldCheck, CheckSquare, Loader2 } from "lucide-react
 const ADMIN_SECTIONS = [
   { id: "dashboard", label: "Dashboard", desc: "View key metrics and overview" },
   { id: "employees", label: "Employees", desc: "Manage employee records" },
+  { id: "clients", label: "Clients", desc: "Manage client accounts and duties" },
   { id: "departments", label: "Departments", desc: "Manage organization structure" },
   { id: "designations", label: "Designations", desc: "Manage job titles" },
+  { id: "vendors", label: "Vendors", desc: "Manage contracted vendors and duties" },
+  { id: "leads", label: "Leads", desc: "Manage sales and enquiry leads" },
   { id: "attendance", label: "Attendance Reports", desc: "View attendance logs and reports" },
   { id: "daily_attendance", label: "Daily Attendance", desc: "Mark daily attendance for employees" },
   { id: "leave", label: "Leave", desc: "Approve or reject leave requests" },
   { id: "payroll", label: "Payroll", desc: "Run payroll and manage payslips" },
+  { id: "reports", label: "Reports", desc: "Generate and export HR reports" },
   { id: "performance", label: "Performance", desc: "Manage performance reviews" },
   { id: "training", label: "Training", desc: "Manage training programs" },
   { id: "assets", label: "Assets", desc: "Manage IT assets and assignments" },
   { id: "helpdesk", label: "Helpdesk", desc: "Manage employee support tickets" },
   { id: "compliance", label: "Compliance", desc: "Manage company policies" },
   { id: "roles", label: "Roles", desc: "Manage custom roles and permissions" },
+  { id: "ebc_dutys", label: "EBC Dutys", desc: "Manage EBC duties, categories and users" },
   { id: "settings", label: "Settings", desc: "Manage company settings" },
 ];
 

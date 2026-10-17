@@ -32,16 +32,18 @@ export default function AddEmployeePage() {
   const [designations, setDesignations] = useState<any[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
 
   useEffect(() => {
     if (!companyId) return;
     const fetchData = async () => {
       try {
-        const [deps, desigs, emps, rolesData] = await Promise.all([
+        const [deps, desigs, emps, rolesData, vendorsData] = await Promise.all([
           listDocuments(companyId, "departments"),
           listDocuments(companyId, "designations"),
           listDocuments(companyId, "employees"),
-          listDocuments(companyId, "roles")
+          listDocuments(companyId, "roles"),
+          listDocuments(companyId, "vendors")
         ]);
         setDepartments(deps);
         setDesignations(desigs);
@@ -49,6 +51,7 @@ export default function AddEmployeePage() {
         // For now let's just show all employees as potential managers to keep it simple, or filter by role existence.
         setManagers(emps);
         setRoles(rolesData);
+        setVendors(vendorsData);
       } catch (error) {
         console.error("Error fetching dropdown data:", error);
       }
@@ -147,11 +150,12 @@ export default function AddEmployeePage() {
       if (!cleanData.departmentId) delete cleanData.departmentId;
       if (!cleanData.designationId) delete cleanData.designationId;
       if (!cleanData.reportingManagerId) delete cleanData.reportingManagerId;
+      if (!cleanData.vendorId) delete cleanData.vendorId;
 
       await createDocument(companyId, "employees", cleanData, uid);
       
       alert("Employee created successfully!");
-      router.push("/admin/employees");
+      router.push("/super-admin/employees");
     } catch (error: any) {
       console.error("Error creating employee:", error);
       alert("Failed to create employee: " + (error.message || "Unknown error"));
@@ -311,6 +315,15 @@ export default function AddEmployeePage() {
                 <option value="">Select Manager</option>
                 {managers.map(m => (
                   <option key={m.id} value={m.id}>{m.firstName} {m.lastName}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Vendor (If Contracted)</label>
+              <select className="flex h-10 w-full rounded-lg border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm" {...register("vendorId")}>
+                <option value="">None / Select Vendor</option>
+                {vendors.map(v => (
+                  <option key={v.id} value={v.id}>{v.name} - {v.companyName}</option>
                 ))}
               </select>
             </div>
