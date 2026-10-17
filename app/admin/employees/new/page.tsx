@@ -72,6 +72,7 @@ export default function AddEmployeePage() {
       role: "employee",
       employmentStatus: "active",
       employmentType: "full_time",
+      dutyHours: "",
     },
   });
 
@@ -290,6 +291,10 @@ export default function AddEmployeePage() {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Work Location</label>
               <Input placeholder="e.g. Office, Remote, Site" {...register("workLocation")} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Duty Hours (Optional)</label>
+              <Input placeholder="e.g. 8 Hours, 9 hrs, or 10:00 AM - 6:00 PM" {...register("dutyHours")} />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Department</label>

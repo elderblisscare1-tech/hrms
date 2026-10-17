@@ -151,6 +151,7 @@ export default function AttendancePage() {
               <thead>
                 <tr className="border-b border-[hsl(var(--border))]">
                   <th className="text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider p-4">Employee</th>
+                  <th className="text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider p-4">Duty Hours</th>
                   <th className="text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider p-4">Punch In</th>
                   <th className="text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider p-4">Punch Out</th>
                   <th className="text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider p-4">Hours</th>
@@ -177,6 +178,16 @@ export default function AttendancePage() {
                             <p className="text-xs text-[hsl(var(--muted-foreground))]">{getDeptName(emp?.departmentId)}</p>
                           </div>
                         </div>
+                      </td>
+                      <td className="p-4">
+                        {emp?.dutyHours ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-[hsl(var(--primary)/0.08)] text-[hsl(var(--primary))] border border-[hsl(var(--primary)/0.2)]">
+                            <Clock className="h-3.5 w-3.5" />
+                            {emp.dutyHours}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[hsl(var(--muted-foreground))]">—</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <span className="text-sm flex items-center gap-1.5">

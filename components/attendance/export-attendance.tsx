@@ -36,6 +36,7 @@ export function ExportAttendance({ companyId, employees }: { companyId: string, 
         employeeRows[emp.id] = {
           "Employee ID": emp.id || "N/A",
           "Employee Name": `${emp.firstName} ${emp.lastName}`,
+          "Duty Hours": emp.dutyHours || "N/A",
           "Role": emp.role || "N/A",
           "Total Present": 0,
           "Total Absent": 0,

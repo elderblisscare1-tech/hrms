@@ -239,6 +239,10 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
               <Input placeholder="e.g. Office, Remote, Site" {...register("workLocation")} />
             </div>
             <div>
+              <label className="text-sm font-medium mb-1.5 block">Duty Hours (Optional)</label>
+              <Input placeholder="e.g. 8 Hours, 9 hrs, or 10:00 AM - 6:00 PM" {...register("dutyHours")} />
+            </div>
+            <div>
               <label className="text-sm font-medium mb-1.5 block">Target Working Days/Month</label>
               <Input type="number" min="0" max="31" placeholder="e.g. 22" {...register("targetWorkingDays", { valueAsNumber: true })} />
             </div>

@@ -18,6 +18,7 @@ export const employeeSchema = z.object({
   vendorId: firestoreIdSchema.optional().or(z.literal("")),
   role: z.string().min(1, "Role is required"),
   workLocation: z.string().optional(),
+  dutyHours: z.string().optional(),
   emergencyContact: z.object({
     name: z.string().optional(),
     phone: z.string().optional(),

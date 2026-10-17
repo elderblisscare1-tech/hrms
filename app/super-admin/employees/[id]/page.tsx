@@ -266,6 +266,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               { label: "Employment Type", value: employee.employmentType.replace("_", " ").toUpperCase() },
               { label: "Date of Joining", value: new Date(employee.dateOfJoining).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" }) },
               { label: "Reporting Manager", value: managerName },
+              { label: "Duty Hours", value: employee.dutyHours || "Not specified" },
               { label: "Role", value: roleName.toUpperCase() },
             ].map((item) => (
               <div key={item.label} className="flex justify-between items-center py-1 border-b border-[hsl(var(--border)/0.5)] last:border-0">
