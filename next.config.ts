@@ -4,10 +4,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    // Ensure minor lint warnings never fail production builds on Vercel
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
