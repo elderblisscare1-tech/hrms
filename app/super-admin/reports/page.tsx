@@ -8,6 +8,7 @@ import { listDocuments } from "@/lib/firebase/firestore";
 import type { Employee } from "@/lib/schemas/employee";
 import type { Vendor } from "@/lib/schemas/vendor";
 import type { AttendanceRecord } from "@/lib/schemas/attendance";
+import { getEmployeeJoiningDate } from "@/lib/utils/attendance";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,9 +60,11 @@ export default function ReportsPage() {
       const employeesData = employees.map(emp => {
         const vendor = emp.vendorId ? vendorMap.get(emp.vendorId) : null;
         const attendance = emp.id ? attendanceMap.get(emp.id) : null;
+        const joiningDate = getEmployeeJoiningDate(emp);
         
         const row: Record<string, string> = {
           "Employee Name": `${emp.firstName} ${emp.lastName}`,
+          "Date of Joining": joiningDate || "N/A",
         };
 
         if (options.contactInfo) {
@@ -81,7 +84,11 @@ export default function ReportsPage() {
         }
 
         if (options.dailyAttendance) {
-          row[`Attendance (${selectedDate})`] = attendance ? attendance.status.toUpperCase() : "NOT MARKED";
+          if (joiningDate && selectedDate < joiningDate) {
+            row[`Attendance (${selectedDate})`] = "NOT JOINED";
+          } else {
+            row[`Attendance (${selectedDate})`] = attendance ? attendance.status.toUpperCase() : "NOT MARKED";
+          }
         }
 
         return row;
@@ -115,13 +122,17 @@ export default function ReportsPage() {
           .map(emp => {
             const vendor = vendorMap.get(emp.vendorId as string)!;
             const attendance = emp.id ? attendanceMap.get(emp.id) : null;
+            const joiningDate = getEmployeeJoiningDate(emp);
             
             return {
               "Vendor Name": vendor.name,
               "Vendor Company": vendor.companyName,
               "Employee Name": `${emp.firstName} ${emp.lastName}`,
+              "Date of Joining": joiningDate || "N/A",
               "Employee Role": emp.role,
-              [`Employee Attendance (${selectedDate})`]: attendance ? attendance.status.toUpperCase() : "NOT MARKED",
+              [`Employee Attendance (${selectedDate})`]: (joiningDate && selectedDate < joiningDate)
+                ? "NOT JOINED"
+                : attendance ? attendance.status.toUpperCase() : "NOT MARKED",
             };
           });
         

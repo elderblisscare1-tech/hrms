@@ -93,6 +93,20 @@ export default function EditEmployeePage({ params }: { params: Promise<{ id: str
       if (!cleanData.vendorId) delete cleanData.vendorId;
 
       await updateDocument(companyId, "employees", id, cleanData);
+
+      // Keep /users/{id} in sync for auth fallback
+      try {
+        const { setDoc, doc } = await import("firebase/firestore");
+        const { db } = await import("@/lib/firebase/client");
+        await setDoc(doc(db, "users", id), {
+          companyId,
+          role: cleanData.role,
+          employeeId: id,
+        }, { merge: true });
+      } catch (err) {
+        console.error("Failed to sync /users record:", err);
+      }
+
       alert("Employee updated successfully!");
       router.push("/super-admin/employees");
     } catch (error: any) {

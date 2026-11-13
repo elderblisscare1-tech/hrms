@@ -6,16 +6,19 @@ import { listDocuments, deleteDocument } from "@/lib/firebase/firestore";
 import type { AttendanceRecord } from "@/lib/schemas/attendance";
 import type { Employee } from "@/lib/schemas/employee";
 import type { Department } from "@/lib/schemas/department";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/shared/empty-state";
 import {
-  CalendarCheck, Clock, MapPin, Users, Download, Filter, Trash2,
-  ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle,
+  CalendarCheck, Clock, Trash2, CheckCircle2, XCircle, AlertCircle, AlertTriangle
 } from "lucide-react";
 import { ExportAttendance } from "@/components/attendance/export-attendance";
+import {
+  getLocalDateString,
+  getEmployeeJoiningDate,
+} from "@/lib/utils/attendance";
 
 const statusConfig: Record<string, { label: string; variant: "success" | "error" | "warning" | "info"; icon: React.ElementType }> = {
   present: { label: "Present", variant: "success", icon: CheckCircle2 },
@@ -30,10 +33,6 @@ export default function AttendancePage() {
   const [departments, setDepartments] = useState<(Department & { id: string })[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<(AttendanceRecord & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
-  const getLocalDateString = (d: Date = new Date()) => {
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  };
   const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [employeeFilter, setEmployeeFilter] = useState("all");
 
@@ -59,16 +58,47 @@ export default function AttendancePage() {
     fetchData();
   }, [companyId, selectedDate]);
 
-  const filteredRecords = employeeFilter === "all" 
-    ? attendanceRecords 
-    : attendanceRecords.filter(r => r.employeeId === employeeFilter);
+  // Filter out any records that were erroneously created before an employee's joining date
+  const { validRecords, invalidRecords } = React.useMemo(() => {
+    const valid: (AttendanceRecord & { id: string })[] = [];
+    const invalid: (AttendanceRecord & { id: string })[] = [];
 
-  const presentCount = filteredRecords.filter(r => r.status === "present").length;
-  const absentCount = filteredRecords.filter(r => r.status === "absent").length;
-  const lateCount = filteredRecords.filter(r => r.status === "late").length;
-  const leaveCount = filteredRecords.filter(r => r.status === "on_leave").length;
+    attendanceRecords.forEach(r => {
+      const emp = employees.find(e => e.id === r.employeeId);
+      const joiningDate = getEmployeeJoiningDate(emp);
+      if (joiningDate && selectedDate < joiningDate) {
+        invalid.push(r);
+      } else {
+        valid.push(r);
+      }
+    });
 
-  const displayDate = new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    return { validRecords: valid, invalidRecords: invalid };
+  }, [attendanceRecords, employees, selectedDate]);
+
+  const filteredRecords = React.useMemo(() => 
+    employeeFilter === "all" 
+      ? validRecords 
+      : validRecords.filter(r => r.employeeId === employeeFilter),
+  [validRecords, employeeFilter]);
+
+  const { presentCount, absentCount, lateCount, leaveCount } = React.useMemo(() => {
+    let presentCount = 0, absentCount = 0, lateCount = 0, leaveCount = 0;
+    filteredRecords.forEach(r => {
+      if (r.status === "present") presentCount++;
+      else if (r.status === "absent") absentCount++;
+      else if (r.status === "late") lateCount++;
+      else if (r.status === "on_leave") leaveCount++;
+    });
+    return { presentCount, absentCount, lateCount, leaveCount };
+  }, [filteredRecords]);
+
+  const displayDate = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-IN", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
 
   const getDeptName = (deptId?: string) => {
     const dept = departments.find(d => d.id === deptId);
@@ -83,6 +113,21 @@ export default function AttendancePage() {
       } catch (error) {
         console.error("Error deleting record", error);
         alert("Failed to delete record.");
+      }
+    }
+  };
+
+  const handlePurgeInvalid = async () => {
+    if (confirm(`Remove ${invalidRecords.length} invalid attendance record(s) dated before employee joining dates?`)) {
+      try {
+        for (const rec of invalidRecords) {
+          await deleteDocument(companyId, `attendance/${selectedDate}/records`, rec.id);
+        }
+        fetchData();
+        alert("Invalid records purged successfully!");
+      } catch (err) {
+        console.error("Failed to purge records", err);
+        alert("Failed to purge records.");
       }
     }
   };
@@ -107,13 +152,34 @@ export default function AttendancePage() {
             className="h-9 px-3 rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] text-sm max-w-[200px]"
           >
             <option value="all">All Employees</option>
-            {employees.map(emp => (
-              <option key={emp.id} value={emp.id}>{emp.firstName} {emp.lastName}</option>
-            ))}
+            {employees.map(emp => {
+              const joiningDate = getEmployeeJoiningDate(emp);
+              const isNotYetJoined = joiningDate && selectedDate < joiningDate;
+              return (
+                <option key={emp.id} value={emp.id} disabled={Boolean(isNotYetJoined)}>
+                  {emp.firstName} {emp.lastName} {isNotYetJoined ? `(Joined ${joiningDate})` : ""}
+                </option>
+              );
+            })}
           </select>
           <ExportAttendance companyId={companyId} employees={employees} />
         </div>
       </div>
+
+      {/* Invalid Records Warning & 1-Click Clean */}
+      {invalidRecords.length > 0 && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-400 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              Found <strong>{invalidRecords.length}</strong> legacy record(s) recorded prior to employee joining date. These are excluded from stats.
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handlePurgeInvalid} className="border-amber-500/40 hover:bg-amber-500/20 w-fit">
+            Purge {invalidRecords.length} Invalid Record{invalidRecords.length > 1 ? "s" : ""}
+          </Button>
+        </div>
+      )}
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -142,8 +208,7 @@ export default function AttendancePage() {
           <EmptyState
             icon={<CalendarCheck className="h-10 w-10 text-[hsl(var(--muted-foreground))]" />}
             title="No attendance records"
-            description={`No attendance records found for ${displayDate}.`}
-            action={{ label: "Log Attendance", onClick: () => {} }}
+            description={`No valid attendance records found for ${displayDate}.`}
           />
         ) : (
           <div className="overflow-x-auto">

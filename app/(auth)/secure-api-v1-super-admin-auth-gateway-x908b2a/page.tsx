@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 import { signIn, signInWithGoogle, getUserClaims } from "@/lib/firebase/auth";
+import { fetchRoleDefinition, getUserAccessDetails } from "@/lib/auth/rbac";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,21 +27,15 @@ export default function LoginPage() {
     try {
       const result = await signIn(data.email, data.password);
       const claims = await getUserClaims(result.user);
-      const role = claims.role as string;
-      const companyId = claims.companyId as string;
-      
-      let isSuperAdmin = role === "super_admin";
+      const companyId = claims.companyId || "demo_company";
+      const roleDoc = await fetchRoleDefinition(companyId, claims.role);
+      const access = getUserAccessDetails(claims, roleDoc);
 
-      if (isSuperAdmin) {
+      if (access.isSuperAdmin) {
         const params = new URLSearchParams(window.location.search);
         const callbackUrl = params.get("callbackUrl");
-        if (callbackUrl) {
-          router.push(callbackUrl);
-        } else {
-          router.push("/super-admin/dashboard");
-        }
+        router.push(callbackUrl || "/super-admin/dashboard");
       } else {
-        // Not a super admin
         await import("@/lib/firebase/auth").then(m => m.signOut());
         setError("Access denied. Super Admin privileges required.");
       }
@@ -64,19 +59,14 @@ export default function LoginPage() {
     try {
       const result = await signInWithGoogle();
       const claims = await getUserClaims(result.user);
-      const role = claims.role as string;
-      const companyId = claims.companyId as string;
-      
-      let isSuperAdmin = role === "super_admin";
+      const companyId = claims.companyId || "demo_company";
+      const roleDoc = await fetchRoleDefinition(companyId, claims.role);
+      const access = getUserAccessDetails(claims, roleDoc);
 
-      if (isSuperAdmin) {
+      if (access.isSuperAdmin) {
         const params = new URLSearchParams(window.location.search);
         const callbackUrl = params.get("callbackUrl");
-        if (callbackUrl) {
-          router.push(callbackUrl);
-        } else {
-          router.push("/super-admin/dashboard");
-        }
+        router.push(callbackUrl || "/super-admin/dashboard");
       } else {
         await import("@/lib/firebase/auth").then(m => m.signOut());
         setError("Access denied. Super Admin privileges required.");

@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 import { signIn, signInWithGoogle, getUserClaims } from "@/lib/firebase/auth";
+import { fetchRoleDefinition, resolveLoginRedirect } from "@/lib/auth/rbac";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,41 +27,14 @@ export default function LoginPage() {
     try {
       const result = await signIn(data.email, data.password);
       const claims = await getUserClaims(result.user);
-      const role = claims.role as string;
-      const companyId = claims.companyId as string;
-      
-      let canAccessAdmin = role === "hr_admin" || role === "admin";
-      if (!canAccessAdmin && role && companyId) {
-        try {
-          const { getDocument } = await import("@/lib/firebase/firestore");
-          const roleDoc = await getDocument<any>(companyId, "roles", role);
-          if (roleDoc?.permissions?.canAccessAdminPortal) {
-            canAccessAdmin = true;
-          }
-        } catch (e) {
-          console.error("Failed to fetch role permissions during login", e);
-        }
-      }
+      const companyId = claims.companyId || "demo_company";
+      const roleDoc = await fetchRoleDefinition(companyId, claims.role);
 
-      if (role === "super_admin") {
-        await import("@/lib/firebase/auth").then(m => m.signOut());
-        setError("Please use the Super Admin login portal.");
-        return;
-      }
+      const params = new URLSearchParams(window.location.search);
+      const callbackUrl = params.get("callbackUrl");
 
-      if (canAccessAdmin) {
-        const params = new URLSearchParams(window.location.search);
-        const callbackUrl = params.get("callbackUrl");
-        if (callbackUrl) {
-          router.push(callbackUrl);
-        } else {
-          router.push("/admin/dashboard");
-        }
-      } else {
-        // Not an admin
-        await import("@/lib/firebase/auth").then(m => m.signOut());
-        setError("Access denied. Admin privileges required.");
-      }
+      const destination = callbackUrl || resolveLoginRedirect(claims, roleDoc, "admin-login");
+      router.push(destination);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed";
       if (message.includes("user-not-found") || message.includes("wrong-password") || message.includes("invalid-credential")) {
@@ -81,40 +55,14 @@ export default function LoginPage() {
     try {
       const result = await signInWithGoogle();
       const claims = await getUserClaims(result.user);
-      const role = claims.role as string;
-      const companyId = claims.companyId as string;
-      
-      let canAccessAdmin = role === "hr_admin" || role === "admin";
-      if (!canAccessAdmin && role && companyId) {
-        try {
-          const { getDocument } = await import("@/lib/firebase/firestore");
-          const roleDoc = await getDocument<any>(companyId, "roles", role);
-          if (roleDoc?.permissions?.canAccessAdminPortal) {
-            canAccessAdmin = true;
-          }
-        } catch (e) {
-          console.error("Failed to fetch role permissions during login", e);
-        }
-      }
+      const companyId = claims.companyId || "demo_company";
+      const roleDoc = await fetchRoleDefinition(companyId, claims.role);
 
-      if (role === "super_admin") {
-        await import("@/lib/firebase/auth").then(m => m.signOut());
-        setError("Please use the Super Admin login portal.");
-        return;
-      }
+      const params = new URLSearchParams(window.location.search);
+      const callbackUrl = params.get("callbackUrl");
 
-      if (canAccessAdmin) {
-        const params = new URLSearchParams(window.location.search);
-        const callbackUrl = params.get("callbackUrl");
-        if (callbackUrl) {
-          router.push(callbackUrl);
-        } else {
-          router.push("/admin/dashboard");
-        }
-      } else {
-        await import("@/lib/firebase/auth").then(m => m.signOut());
-        setError("Access denied. Admin privileges required.");
-      }
+      const destination = callbackUrl || resolveLoginRedirect(claims, roleDoc, "admin-login");
+      router.push(destination);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Google sign-in failed";
       if (!message.includes("popup-closed")) {

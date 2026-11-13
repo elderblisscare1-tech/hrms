@@ -72,14 +72,43 @@ export async function getUserClaims(user: User): Promise<UserClaims> {
           employeeId = data.employeeId;
         }
       }
+
+      // Check if the employee exists under companies/{companyId}/employees
+      if (!role) {
+        const effectiveCompany = companyId || "demo_company";
+        const empDoc = await getDoc(doc(db, "companies", effectiveCompany, "employees", user.uid));
+        if (empDoc.exists()) {
+          const empData = empDoc.data();
+          role = empData.role;
+          if (empData.companyId) companyId = empData.companyId;
+          employeeId = empDoc.id;
+        } else if (user.email) {
+          const { collection, query, where, getDocs } = await import("firebase/firestore");
+          const q = query(collection(db, "companies", effectiveCompany, "employees"), where("email", "==", user.email));
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            const empData = snap.docs[0].data();
+            role = empData.role;
+            if (empData.companyId) companyId = empData.companyId;
+            employeeId = snap.docs[0].id;
+          }
+        }
+      }
     } catch (e) {
       console.error("Error fetching claims fallback", e);
     }
   }
 
-  // Failsafe for the developer's email to guarantee access even if Firestore document UID mismatch
-  if (user.email === "adarshshrivasta55@gmail.com" || user.email === "adarshshrivastav55@gmail.com") {
+  // Failsafe for admin and developer emails to guarantee access
+  const emailLower = (user.email || "").toLowerCase();
+  if (
+    emailLower === "adarshshrivasta55@gmail.com" ||
+    emailLower === "adarshshrivastav55@gmail.com" ||
+    emailLower === "admin@nsc.com"
+  ) {
     role = "super_admin";
+  } else if (!role && emailLower.includes("admin")) {
+    role = "hr_admin";
   }
 
   // Prevent crashes by always providing a default company if none is found

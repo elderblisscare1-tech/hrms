@@ -1,10 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { type User } from "firebase/auth";
 import { onAuthChange, getUserClaims, type UserClaims } from "@/lib/firebase/auth";
-import { getDocument } from "@/lib/firebase/firestore";
 import type { Role } from "@/lib/schemas/role";
+import {
+  fetchRoleDefinition,
+  hasSectionPermission,
+  getUserAccessDetails,
+} from "@/lib/auth/rbac";
 
 interface AuthState {
   user: User | null;
@@ -17,7 +21,16 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   refreshClaims: () => Promise<void>;
   hasPermission: (section: string) => boolean;
+  access: ReturnType<typeof getUserAccessDetails>;
 }
+
+const defaultAccess = {
+  isSuperAdmin: false,
+  isAdmin: false,
+  canAccessAdminPortal: false,
+  canAccessEmployeePortal: false,
+  firstAdminRoute: "/admin/dashboard",
+};
 
 const AuthContext = createContext<AuthContextValue>({
   user: null,
@@ -27,6 +40,7 @@ const AuthContext = createContext<AuthContextValue>({
   error: null,
   refreshClaims: async () => {},
   hasPermission: () => false,
+  access: defaultAccess,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -38,24 +52,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     error: null,
   });
 
-  const hasPermission = useCallback((section: string) => {
-    if (state.claims?.role === "hr_admin" || state.claims?.role === "super_admin" || state.claims?.role === "admin") return true;
-    if (!state.roleDoc) return false;
-    return state.roleDoc.permissions.adminSections.includes(section);
-  }, [state.claims, state.roleDoc]);
+  const hasPermission = useCallback(
+    (section: string) => {
+      return hasSectionPermission(section, state.claims, state.roleDoc);
+    },
+    [state.claims, state.roleDoc]
+  );
 
   const refreshClaims = useCallback(async () => {
     if (!state.user) return;
     try {
       const claims = await getUserClaims(state.user);
-      let roleDoc: Role | null = null;
-      if (claims.companyId && claims.role && claims.role !== "hr_admin" && claims.role !== "super_admin" && claims.role !== "admin") {
-        try {
-          roleDoc = await getDocument(claims.companyId, "roles", claims.role) as Role;
-        } catch (e) {
-          console.error("Failed to fetch role doc:", e);
-        }
-      }
+      const companyId = claims.companyId || "demo_company";
+      const roleDoc = await fetchRoleDefinition(companyId, claims.role);
       setState((prev) => ({ ...prev, claims, roleDoc }));
     } catch (err) {
       console.error("Failed to refresh claims:", err);
@@ -67,14 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         try {
           const claims = await getUserClaims(user);
-          let roleDoc: Role | null = null;
-          if (claims.companyId && claims.role && claims.role !== "hr_admin" && claims.role !== "super_admin" && claims.role !== "admin") {
-            try {
-              roleDoc = await getDocument(claims.companyId, "roles", claims.role) as Role;
-            } catch (e) {
-              console.error("Failed to fetch role doc:", e);
-            }
-          }
+          const companyId = claims.companyId || "demo_company";
+          const roleDoc = await fetchRoleDefinition(companyId, claims.role);
           setState({ user, claims, roleDoc, loading: false, error: null });
         } catch {
           setState({ user, claims: null, roleDoc: null, loading: false, error: null });
@@ -87,8 +90,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  const access = useMemo(() => {
+    return getUserAccessDetails(state.claims, state.roleDoc);
+  }, [state.claims, state.roleDoc]);
+
   return (
-    <AuthContext.Provider value={{ ...state, refreshClaims, hasPermission }}>
+    <AuthContext.Provider value={{ ...state, refreshClaims, hasPermission, access }}>
       {children}
     </AuthContext.Provider>
   );

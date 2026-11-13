@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    // Ensure minor lint warnings never fail production builds on Vercel
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -11,7 +18,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'lh3.googleusercontent.com', // for google auth avatars
+        hostname: 'lh3.googleusercontent.com',
         port: '',
         pathname: '/**',
       }

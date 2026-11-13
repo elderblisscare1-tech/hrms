@@ -8,6 +8,7 @@ import { listDocuments } from "@/lib/firebase/firestore";
 import type { Employee } from "@/lib/schemas/employee";
 import type { Vendor } from "@/lib/schemas/vendor";
 import type { AttendanceRecord } from "@/lib/schemas/attendance";
+import { getEmployeeJoiningDate } from "@/lib/utils/attendance";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,7 @@ export default function ReportsPage() {
         
         const row: Record<string, string> = {
           "Employee Name": `${emp.firstName} ${emp.lastName}`,
+          "Date of Joining": getEmployeeJoiningDate(emp) || "N/A",
         };
 
         if (options.contactInfo) {
@@ -98,9 +100,14 @@ export default function ReportsPage() {
         }
 
         if (options.dailyAttendance) {
+          const joiningDate = getEmployeeJoiningDate(emp);
           dates.forEach(date => {
-            const record = attendance?.[date];
-            row[`Attendance (${date})`] = record ? record.status.toUpperCase() : "NOT MARKED";
+            if (joiningDate && date < joiningDate) {
+              row[`Attendance (${date})`] = "NOT JOINED";
+            } else {
+              const record = attendance?.[date];
+              row[`Attendance (${date})`] = record ? record.status.toUpperCase() : "NOT MARKED";
+            }
           });
         }
 
@@ -135,17 +142,23 @@ export default function ReportsPage() {
           .map(emp => {
             const vendor = vendorMap.get(emp.vendorId as string)!;
             const attendance = emp.id ? attendanceMap.get(emp.id) : null;
+            const joiningDate = getEmployeeJoiningDate(emp);
             
             const row: Record<string, string> = {
               "Vendor Name": vendor.name,
               "Vendor Company": vendor.companyName,
               "Employee Name": `${emp.firstName} ${emp.lastName}`,
+              "Date of Joining": joiningDate || "N/A",
               "Employee Role": emp.role,
             };
             
             dates.forEach(date => {
-              const record = attendance?.[date];
-              row[`Employee Attendance (${date})`] = record ? record.status.toUpperCase() : "NOT MARKED";
+              if (joiningDate && date < joiningDate) {
+                row[`Employee Attendance (${date})`] = "NOT JOINED";
+              } else {
+                const record = attendance?.[date];
+                row[`Employee Attendance (${date})`] = record ? record.status.toUpperCase() : "NOT MARKED";
+              }
             });
             
             return row;

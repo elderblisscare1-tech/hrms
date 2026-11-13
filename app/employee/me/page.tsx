@@ -6,6 +6,7 @@ import { getDocument, listDocuments, subscribeToDocument } from "@/lib/firebase/
 import type { Employee } from "@/lib/schemas/employee";
 import type { LeaveRequest } from "@/lib/schemas/leave";
 import type { AttendanceRecord } from "@/lib/schemas/attendance";
+import { getEmployeeJoiningDate, getLocalDateString } from "@/lib/utils/attendance";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,10 +63,15 @@ export default function EmployeeHomePage() {
         const empData = await getDocument<Employee>(companyId, "employees", employeeId);
         
         const today = new Date();
-        const pad = (n: number) => n.toString().padStart(2, '0');
-        const dateStringToday = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-        const attData = await getDocument<AttendanceRecord>(companyId, `attendance/${dateStringToday}/records`, employeeId);
-        if (attData) setAttendanceToday(attData);
+        const dateStringToday = getLocalDateString(today);
+        const joiningDateStr = getEmployeeJoiningDate(empData);
+
+        if (!joiningDateStr || dateStringToday >= joiningDateStr) {
+          const attData = await getDocument<AttendanceRecord>(companyId, `attendance/${dateStringToday}/records`, employeeId);
+          if (attData) setAttendanceToday(attData);
+        } else {
+          setAttendanceToday(null);
+        }
 
         // Fetch leave requests for balance calculation
         const leaves = await listDocuments<LeaveRequest>(companyId, "leaveRequests");
@@ -73,15 +79,25 @@ export default function EmployeeHomePage() {
         const used = myLeaves.reduce((acc, curr) => acc + curr.days, 0);
         setLeaveBalance({ casual: 4, earned: Math.max(8 - used, 0), total: 12 - used });
 
-        // Fetch monthly attendance for percentage calculation
+        // Fetch monthly attendance for percentage calculation (strictly from joining date)
         let presentCount = 0;
         let totalWorkDays = today.getDate(); // Up to today
+        let startDay = 1;
+
+        if (joiningDateStr) {
+          const [jYear, jMonth, jDay] = joiningDateStr.split("-").map(Number);
+          if (jYear === today.getFullYear() && jMonth === today.getMonth() + 1) {
+            startDay = Math.max(1, jDay);
+          } else if (joiningDateStr > dateStringToday) {
+            startDay = totalWorkDays + 1; // Not yet joined
+          }
+        }
         
         const attPromises: any[] = [];
-        for (let i = 1; i <= totalWorkDays; i++) {
+        for (let i = startDay; i <= totalWorkDays; i++) {
           const date = new Date(today.getFullYear(), today.getMonth(), i);
           if (date.getDay() === 0) continue; // skip sunday
-          const dateString = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+          const dateString = getLocalDateString(date);
           attPromises.push(
             getDocument<AttendanceRecord>(companyId, `attendance/${dateString}/records`, employeeId)
           );

@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { useCompanyId } from "@/lib/auth/auth-context";
-import { listDocuments, createDocument, updateDocument } from "@/lib/firebase/firestore";
+import { listDocuments, createDocument, deleteDocument } from "@/lib/firebase/firestore";
 import type { AttendanceRecord } from "@/lib/schemas/attendance";
 import type { Employee } from "@/lib/schemas/employee";
 import type { Department } from "@/lib/schemas/department";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,9 +14,13 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ExportAttendance } from "@/components/attendance/export-attendance";
 import { Input } from "@/components/ui/input";
 import {
-  CalendarCheck, Clock, MapPin, Users, Download, Filter,
-  ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle, Save
+  CalendarCheck, Clock, Users, Save, AlertCircle, CalendarOff, UserX
 } from "lucide-react";
+import {
+  getLocalDateString,
+  getEmployeeJoiningDate,
+  categorizeEmployeesByJoiningDate,
+} from "@/lib/utils/attendance";
 
 export default function DailyAttendancePage() {
   const companyId = useCompanyId();
@@ -25,10 +29,6 @@ export default function DailyAttendancePage() {
   const [attendanceRecords, setAttendanceRecords] = useState<(AttendanceRecord & { id: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const getLocalDateString = (d: Date = new Date()) => {
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  };
   const [selectedDate, setSelectedDate] = useState(getLocalDateString());
 
   // Local edits state mapping employeeId -> Partial<AttendanceRecord>
@@ -43,7 +43,7 @@ export default function DailyAttendancePage() {
           listDocuments<Department>(companyId, "departments"),
           listDocuments<AttendanceRecord>(companyId, `attendance/${selectedDate}/records`)
         ]);
-        setEmployees(empData.filter(e => e.employmentStatus === "active")); // Only show active employees
+        setEmployees(empData.filter(e => e.employmentStatus === "active"));
         setDepartments(deptData);
         setAttendanceRecords(attData);
         setEdits({});
@@ -56,7 +56,20 @@ export default function DailyAttendancePage() {
     fetchData();
   }, [companyId, selectedDate]);
 
+  // Categorize employees strictly based on whether their joining date is on or before selectedDate
+  const { eligible: eligibleEmployees, notJoinedYet: notJoinedYetEmployees } = React.useMemo(() => {
+    return categorizeEmployeesByJoiningDate(employees, selectedDate);
+  }, [employees, selectedDate]);
+
   const handleEdit = (employeeId: string, field: keyof AttendanceRecord, value: any) => {
+    // Prevent editing if the employee joined after selectedDate
+    const emp = employees.find(e => e.id === employeeId);
+    const joiningDate = getEmployeeJoiningDate(emp);
+    if (joiningDate && selectedDate < joiningDate) {
+      alert(`Cannot mark attendance: ${emp?.firstName || 'Employee'} joined on ${joiningDate}, which is after ${selectedDate}.`);
+      return;
+    }
+
     setEdits(prev => ({
       ...prev,
       [employeeId]: {
@@ -69,7 +82,8 @@ export default function DailyAttendancePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const promises = employees.map(async (emp) => {
+      // 1. Strictly save attendance ONLY for eligible employees (joined on or before selectedDate)
+      const promises = eligibleEmployees.map(async (emp) => {
         const employeeId = emp.id;
         const updates = edits[employeeId] || {};
         const existingRecord = attendanceRecords.find(r => r.employeeId === employeeId);
@@ -82,18 +96,34 @@ export default function DailyAttendancePage() {
           checkOut: updates.checkOut !== undefined ? updates.checkOut : (existingRecord?.checkOut || ""),
         };
         
-        // If there's an existing record with a bad ID, delete it
+        // Clean up legacy records with random doc IDs if any exist
         if (existingRecord && existingRecord.id !== employeeId) {
-          const { deleteDocument } = await import("@/lib/firebase/firestore");
-          await deleteDocument(companyId, `attendance/${selectedDate}/records`, existingRecord.id);
+          try {
+            await deleteDocument(companyId, `attendance/${selectedDate}/records`, existingRecord.id);
+          } catch (e) {
+            console.error("Failed to delete legacy attendance record ID", e);
+          }
         }
         
-        // Upsert with correct customId
+        // Upsert with customId = employeeId for fast, deterministic indexing
         await createDocument(companyId, `attendance/${selectedDate}/records`, recordData, employeeId);
       });
+
+      // 2. Auto-clean: Purge any invalid attendance records that might have been mistakenly saved for employees who hadn't joined yet
+      for (const emp of notJoinedYetEmployees) {
+        const invalidRecord = attendanceRecords.find(r => r.employeeId === emp.id);
+        if (invalidRecord) {
+          try {
+            await deleteDocument(companyId, `attendance/${selectedDate}/records`, invalidRecord.id || emp.id);
+          } catch (e) {
+            console.error("Failed to remove invalid attendance record", e);
+          }
+        }
+      }
+
       await Promise.all(promises);
       
-      // Refresh
+      // Refresh current attendance records
       const attData = await listDocuments<AttendanceRecord>(companyId, `attendance/${selectedDate}/records`);
       setAttendanceRecords(attData);
       setEdits({});
@@ -111,10 +141,15 @@ export default function DailyAttendancePage() {
     return dept ? dept.name : "N/A";
   };
 
-  const displayDate = new Date(selectedDate).toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  const displayDate = new Date(selectedDate + "T00:00:00").toLocaleDateString("en-IN", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
   
-  // A record is missing if an active employee doesn't have an entry in attendanceRecords
-  const missingRecords = employees.some(emp => !attendanceRecords.find(r => r.employeeId === emp.id));
+  // A record is missing if an eligible employee doesn't have an entry in attendanceRecords
+  const missingRecords = eligibleEmployees.some(emp => !attendanceRecords.find(r => r.employeeId === emp.id));
   const hasEdits = Object.keys(edits).length > 0 || missingRecords;
 
   return (
@@ -132,24 +167,50 @@ export default function DailyAttendancePage() {
             className="h-9 px-3 rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] text-sm"
           />
           <ExportAttendance companyId={companyId} employees={employees} />
-          <Button onClick={handleSave} disabled={!hasEdits || saving}>
+          <Button onClick={handleSave} disabled={!hasEdits || saving || eligibleEmployees.length === 0}>
             {saving ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[hsl(var(--primary-foreground))] mr-2"></div> : <Save className="h-4 w-4 mr-2" />}
             Save Changes
           </Button>
         </div>
       </div>
 
+      {/* Notice for employees who joined after this date */}
+      {notJoinedYetEmployees.length > 0 && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-400">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              {notJoinedYetEmployees.length} employee{notJoinedYetEmployees.length > 1 ? "s" : ""} joined after {displayDate} and cannot be marked for attendance on this date:
+            </span>
+          </div>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {notJoinedYetEmployees.map((emp) => {
+              const joiningDate = getEmployeeJoiningDate(emp);
+              return (
+                <span
+                  key={emp.id}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/15 px-2.5 py-1 text-xs font-semibold border border-amber-500/25"
+                >
+                  <UserX className="h-3 w-3" />
+                  {emp.firstName} {emp.lastName}
+                  <span className="opacity-80">(Joined: {joiningDate || "N/A"})</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <Card>
         {loading ? (
           <div className="flex justify-center p-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--primary))]"></div>
           </div>
-        ) : employees.length === 0 ? (
+        ) : eligibleEmployees.length === 0 ? (
           <EmptyState
-            icon={<Users className="h-10 w-10 text-[hsl(var(--muted-foreground))]" />}
-            title="No active employees"
-            description="Add some active employees to manage their attendance."
-            action={{ label: "Add Employee", onClick: () => {} }}
+            icon={<CalendarOff className="h-10 w-10 text-[hsl(var(--muted-foreground))]" />}
+            title="No eligible employees"
+            description={`No employees had joined yet as of ${displayDate}.`}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -164,7 +225,7 @@ export default function DailyAttendancePage() {
                 </tr>
               </thead>
               <tbody>
-                {employees.map((emp) => {
+                {eligibleEmployees.map((emp) => {
                   const empName = `${emp.firstName} ${emp.lastName}`;
                   const existingRecord = attendanceRecords.find(r => r.employeeId === emp.id);
                   const editState = edits[emp.id] || {};

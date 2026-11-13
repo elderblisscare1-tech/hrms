@@ -4,12 +4,15 @@ import React, { useState, useEffect } from "react";
 import { useRequireAuth } from "@/lib/auth/auth-context";
 import { getDocument } from "@/lib/firebase/firestore";
 import type { AttendanceRecord } from "@/lib/schemas/attendance";
+import type { Employee } from "@/lib/schemas/employee";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarCheck, CalendarOff, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { getEmployeeJoiningDate, getLocalDateString } from "@/lib/utils/attendance";
 
 export default function EmployeeAttendancePage() {
   const { claims } = useRequireAuth();
+  const [employee, setEmployee] = useState<Employee | null>(null);
   const [records, setRecords] = useState<(AttendanceRecord & { dateString: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ present: 0, absent: 0, late: 0, onLeave: 0 });
@@ -18,10 +21,15 @@ export default function EmployeeAttendancePage() {
     async function fetchData() {
       if (!claims?.companyId || !claims?.employeeId) return;
       try {
+        const emp = await getDocument<Employee>(claims.companyId, "employees", claims.employeeId);
+        setEmployee(emp);
+
         const today = new Date();
         const year = today.getFullYear();
         const month = today.getMonth();
         const daysInMonth = today.getDate(); // Up to today
+
+        const joiningDate = getEmployeeJoiningDate(emp);
         
         const fetchedRecords: (AttendanceRecord & { dateString: string })[] = [];
         const newStats = { present: 0, absent: 0, late: 0, onLeave: 0 };
@@ -29,15 +37,23 @@ export default function EmployeeAttendancePage() {
         const promises = [];
         for (let i = 1; i <= daysInMonth; i++) {
           const date = new Date(year, month, i);
-          // Skip Sundays for a standard work week assumption (optional)
+          // Skip Sundays
           if (date.getDay() === 0) continue; 
           
-          const pad = (n: number) => n.toString().padStart(2, '0');
-          const dateString = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+          const dateString = getLocalDateString(date);
+
+          // STRICT CHECK: Skip days before joining date
+          if (joiningDate && dateString < joiningDate) {
+            continue;
+          }
+
           promises.push(
             getDocument<AttendanceRecord>(claims.companyId, `attendance/${dateString}/records`, claims.employeeId)
               .then(doc => {
                 if (doc) {
+                  // Safety verification: never include records dated before joining date
+                  if (joiningDate && dateString < joiningDate) return;
+                  
                   fetchedRecords.push({ ...doc, dateString });
                   const status = (doc.status || '').trim().toLowerCase();
                   if (status === 'present') newStats.present++;
@@ -73,11 +89,6 @@ export default function EmployeeAttendancePage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    return d.toLocaleDateString("en-IN", { weekday: "short", month: "short", day: "numeric" });
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center p-12">
@@ -86,11 +97,16 @@ export default function EmployeeAttendancePage() {
     );
   }
 
+  const joiningDate = getEmployeeJoiningDate(employee);
+
   return (
     <div className="space-y-6 pb-6 animate-fade-in">
       <div className="pt-2">
         <h1 className="text-2xl font-bold">My Attendance</h1>
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">Track your attendance for this month</p>
+        <p className="text-sm text-[hsl(var(--muted-foreground))]">
+          Track your attendance for this month
+          {joiningDate && ` • Joined ${new Date(joiningDate + "T00:00:00").toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}`}
+        </p>
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -134,9 +150,9 @@ export default function EmployeeAttendancePage() {
                   <div className="flex items-center gap-3">
                     <div className="text-center w-12 shrink-0 border-r pr-3">
                       <p className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase">
-                        {new Date(record.dateString).toLocaleDateString('en-IN', { weekday: 'short' })}
+                        {new Date(record.dateString + "T00:00:00").toLocaleDateString('en-IN', { weekday: 'short' })}
                       </p>
-                      <p className="text-lg font-bold">{new Date(record.dateString).getDate()}</p>
+                      <p className="text-lg font-bold">{new Date(record.dateString + "T00:00:00").getDate()}</p>
                     </div>
                     <div>
                       {getStatusBadge(record.status)}

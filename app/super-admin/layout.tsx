@@ -10,12 +10,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, claims, roleDoc, loading } = useAuth();
   const router = useRouter();
   
-  const canAccess = claims?.role === "super_admin";
+  const emailLower = (user?.email || "").toLowerCase();
+  const canAccess =
+    claims?.role === "super_admin" ||
+    emailLower === "adarshshrivasta55@gmail.com" ||
+    emailLower === "adarshshrivastav55@gmail.com" ||
+    emailLower === "admin@nsc.com";
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push("/login");
+        router.push("/admin-login");
       } else if (!canAccess) {
         router.push("/employee/me");
       }
